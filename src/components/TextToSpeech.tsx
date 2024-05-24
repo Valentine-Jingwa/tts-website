@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
+import AudioVisualizer from './AudioVisualizer';
 
 // Define custom types for speech recognition events
 type SpeechRecognitionEvent = Event & {
@@ -26,13 +27,9 @@ declare global {
 const TextToSpeech: React.FC = () => {
   const [text, setText] = useState('');
   const [highlightedWordIndex, setHighlightedWordIndex] = useState<number | null>(null);
-  const [gameMode, setGameMode] = useState(false);
-  const [userInput, setUserInput] = useState('');
-  const [score, setScore] = useState(0);
-  const [level, setLevel] = useState(1);
-  const [lives, setLives] = useState(3);
-  const [timeLeft, setTimeLeft] = useState(30);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
+  const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
 
   const textSamples = [
     "Hello world",
@@ -44,36 +41,27 @@ const TextToSpeech: React.FC = () => {
   ];
 
   useEffect(() => {
-    if (gameMode) {
-      setText(textSamples[level - 1]);
-      setHighlightedWordIndex(null);
-      setTimeLeft(30);
-      if (timerRef.current) clearInterval(timerRef.current);
-      timerRef.current = setInterval(() => {
-        setTimeLeft((prevTime) => {
-          if (prevTime <= 1) {
-            handleGameEnd();
-            return 0;
-          }
-          return prevTime - 1;
-        });
-      }, 1000);
-    } else if (timerRef.current) {
-      clearInterval(timerRef.current);
+    if (!audioContext && typeof window !== 'undefined') {
+      const context = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const analyser = context.createAnalyser();
+      analyser.fftSize = 2048;
+      setAudioContext(context);
+      setAnalyser(analyser);
     }
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [gameMode, level]);
+  }, [audioContext]);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value);
   };
 
   const handleSpeak = () => {
-    if ('speechSynthesis' in window) {
+    if ('speechSynthesis' in window && audioContext && analyser) {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'en-US';
+
+      const source = audioContext.createMediaElementSource(new Audio());
+      source.connect(analyser);
+      analyser.connect(audioContext.destination);
 
       const words = text.split(' ');
       utterance.onboundary = (event: SpeechSynthesisEvent) => {
@@ -85,86 +73,30 @@ const TextToSpeech: React.FC = () => {
 
       utterance.onend = () => {
         setHighlightedWordIndex(null);
+        setIsSpeaking(false);
       };
 
       window.speechSynthesis.speak(utterance);
+      setIsSpeaking(true);
     } else {
       alert('Text-to-speech is not supported in this browser.');
     }
   };
 
-  const handleStartGame = () => {
-    setGameMode(true);
-    setScore(0);
-    setLevel(1);
-    setLives(3);
-    setUserInput('');
-  };
-
-  const handleGameEnd = () => {
-    setGameMode(false);
-    alert(`Game Over! Your score: ${score}`);
-  };
-
-  const handleRecognitionResult = (transcript: string) => {
-    setUserInput(transcript);
-    if (transcript.trim().toLowerCase() === text.trim().toLowerCase()) {
-      setScore((prevScore) => prevScore + level * 10);
-      setLevel((prevLevel) => prevLevel + 1);
-    } else {
-      setLives((prevLives) => {
-        const newLives = prevLives - 1;
-        if (newLives <= 0) {
-          handleGameEnd();
-        }
-        return newLives;
-      });
-    }
-  };
-
-  useEffect(() => {
-    if (gameMode && 'webkitSpeechRecognition' in window) {
-      const recognition = new window.webkitSpeechRecognition();
-      recognition.lang = 'en-US';
-      recognition.interimResults = false;
-      recognition.maxAlternatives = 1;
-
-      recognition.onresult = (event: SpeechRecognitionEvent) => {
-        const transcript = event.results[0][0].transcript;
-        handleRecognitionResult(transcript);
-      };
-
-      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-        console.error(event.error);
-      };
-
-      recognition.onend = () => {
-        if (gameMode) {
-          recognition.start();
-        }
-      };
-
-      recognition.start();
-
-      return () => {
-        recognition.stop();
-      };
-    }
-  }, [gameMode, text]);
-
   return (
     <div className="text-to-speech">
-      {!gameMode && (
-        <textarea
-          value={text}
-          onChange={handleChange}
-          placeholder="Enter text here"
-          rows={5}
-        />
-      )}
+      <textarea
+        value={text}
+        onChange={handleChange}
+        placeholder="Enter text here"
+        rows={5}
+      />
       <button onClick={handleSpeak}>Speak</button>
-      {!gameMode && <button onClick={handleStartGame}>Start Game</button>}
-      {gameMode && <button onClick={handleGameEnd}>End Game</button>}
+      <div className="visualization">
+        {audioContext && analyser && (
+          <AudioVisualizer audioContext={audioContext} analyser={analyser} isSpeaking={isSpeaking} />
+        )}
+      </div>
       <div className="text-display">
         {text.split(' ').map((word, index) => (
           <span
@@ -175,15 +107,6 @@ const TextToSpeech: React.FC = () => {
           </span>
         ))}
       </div>
-      {gameMode && (
-        <div className="game-info">
-          <p>Level: {level}</p>
-          <p>Time Left: {timeLeft}s</p>
-          <p>Lives: {lives}</p>
-          <p>Score: {score}</p>
-          <p>Your input: {userInput}</p>
-        </div>
-      )}
     </div>
   );
 };

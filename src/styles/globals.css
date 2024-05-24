@@ -1,9 +1,49 @@
-/* src/styles/globals.css */
 :root {
     --bg-color: #f0f0f0;
     --text-color: #333;
   }
+  .theme-toggle-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 10px;
+  }
   
+  .theme-toggle-slider {
+    width: 200px;
+    appearance: none;
+    height: 10px;
+    background: #ddd;
+    outline: none;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+  
+  .theme-toggle-slider:hover {
+    opacity: 1;
+  }
+  
+  .theme-toggle-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #0070f3;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background 0.4s;
+  }
+  
+  .theme-toggle-slider::-webkit-slider-thumb:hover {
+    background: #005bb5;
+  }
+  
+  .theme-toggle-labels {
+    display: flex;
+    justify-content: space-between;
+    width: 200px;
+    margin-top: 10px;
+  }
+
   html.dark {
     --bg-color: #333;
     --text-color: #f0f0f0;
@@ -19,6 +59,7 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background-color: var(--bg-color);
     color: var(--text-color);
+    transition: background-color 0.5s, color 0.5s;
   }
   
   .container {
@@ -41,7 +82,8 @@
   
   .title {
     margin: 0;
-    font-size: 2rem;
+    font-size: 2.5rem;
+    color: #0070f3;
   }
   
   .main {
@@ -72,6 +114,17 @@
     margin-top: 20px;
   }
   
+  .controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .visualization {
+    margin-bottom: 20px;
+  }
+  
   .text-to-speech textarea {
     width: 100%;
     padding: 10px;
@@ -88,19 +141,39 @@
     background-color: #0070f3;
     color: white;
     cursor: pointer;
+    transition: background-color 0.3s;
+    margin: 5px;
   }
   
   .text-to-speech button:hover {
     background-color: #005bb5;
   }
-
+  
+  .start-game-button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    background-color: #28a745;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .start-game-button:hover {
+    background-color: #218838;
+  }
+  
   .text-display {
     margin-top: 20px;
     font-size: 18px;
+    text-align: center;
   }
   
   .highlight {
     background-color: yellow;
+    transition: background-color 0.3s;
   }
   
   .game-info {
@@ -112,6 +185,107 @@
     margin: 5px 0;
   }
   
-  .text-to-speech button {
-    margin: 10px;
+  .correct {
+    color: green;
+    font-weight: bold;
   }
+  
+  .incorrect {
+    color: red;
+    font-weight: bold;
+  }
+  
+  canvas {
+    border: 1px solid #ccc;
+    margin-top: 20px;
+  }
+  
+  .game-start-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+    text-align: center;
+  }
+  
+  .difficulty-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .difficulty-buttons button {
+    display: flex;
+    align-items: center;
+    margin: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    background-color: #0070f3;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .difficulty-buttons button:hover {
+    background-color: #005bb5;
+  }
+  
+  .difficulty-buttons img {
+    margin-right: 10px;
+    width: 24px;
+    height: 24px;
+  }
+  
+  .game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+  }
+  
+  .game-header {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 800px;
+    margin-bottom: 20px;
+  }
+  
+  .timer {
+    font-size: 1.5rem;
+    animation: pulse 1s infinite;
+  }
+  
+  .score {
+    font-size: 1.5rem;
+  }
+  
+  .lives {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+  }
+  
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  
+  .game-title {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+  
